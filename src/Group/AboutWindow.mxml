@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+					xmlns:s="library://ns.adobe.com/flex/spark"
+					xmlns:mx="library://ns.adobe.com/flex/mx"
+					width="400" height="500" alwaysInFront="true" creationComplete="init(event)"
+					maximizable="false" minimizable="false" resizable="false" showStatusBar="false"
+					title="About Potthaka Project">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@font-face{
+				src:url('../assets/fonts/Kinnari.ttf');
+				fontFamily:Kinnari;
+				src:url('../assets/fonts/Servus_text_display_italic.ttf');
+				fontFamily:Servus;
+			}
+	</fx:Style>
+	<fx:Script>
+		<![CDATA[
+			import flash.net.URLRequest;
+			import flash.net.navigateToURL;
+			
+			import mx.events.FlexEvent;
+			
+			private var request:URLRequest = new URLRequest();
+			private var clicklink:String;
+		
+			protected function init(event:FlexEvent):void {
+				clicklink = "click link to "; 
+				home.toolTip = clicklink + "Potthaka Project website. (202.28.248.59:10080)";
+				cscmu.toolTip = clicklink + "Computer Science CMU website. (www.cs.science.cmu.ac.th)";
+				scicmu.toolTip = clicklink + "Science Faculty CMU website. (www.science.cmu.ac.th)";
+				cmu.toolTip = clicklink + "Chiang Mai University website. (www.cmu.ac.th)";
+			}
+			
+			protected function home_clickHandler(event:MouseEvent):void{
+				request.url = "http://202.28.248.59:10080/";
+				navigateToURL(request, "_blank");
+			}
+			
+			protected function cscmu_clickHandler(event:MouseEvent):void{
+				request.url = "http://www.cs.science.cmu.ac.th/";
+				navigateToURL(request, "_blank");
+			}
+			
+			protected function scicmu_clickHandler(event:MouseEvent):void {
+				request.url = "http://www.science.cmu.ac.th/";
+				navigateToURL(request, "_blank");
+			}
+			
+			protected function cmu_clickHandler(event:MouseEvent):void {
+				request.url = "http://www.cmu.ac.th/";
+				navigateToURL(request, "_blank");
+			}			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+
+	</fx:Declarations>
+	<s:BorderContainer left="0" right="0" top="0" bottom="0">
+	<s:BitmapImage top="5" width="100" height="100" horizontalCenter="0"
+								 source="@Embed('../assets/icons/flower128.png')"
+								 smoothingQuality="default" smooth="true"/>
+	<s:Label id="projectname" top="115" fontFamily="Servus" fontSize="30" fontWeight="normal"
+					 horizontalCenter="0" text="Potthaka Project"/>
+		<s:Label id="deschead" top="160" fontFamily="Kinnari" fontSize="18" horizontalCenter="0"
+						 text="Tranfer Ancient Lanna Manuscripts To Digital"/>
+		<s:Label id="subdesc1" top="205" fontFamily="Kinnari" fontSize="18" horizontalCenter="-90"
+						 text="-On website (Online)"/>
+		<s:Label id="subdesc2" top="205" fontFamily="Kinnari" fontSize="18" horizontalCenter="80"
+						 text="-On portable (Offline)"/>
+	<s:Label id="devoloperby" top="250" fontFamily="Kinnari" fontSize="20" horizontalCenter="0"
+					 text="By Jarutphong Somsiri 4805644"/>
+	<s:Label id="visitme" top="290" height="25" fontFamily="Kinnari" fontSize="20"
+					 horizontalCenter="0" text="Visit Potthaka Project Website"/>
+		<s:Button id="home" top="310" width="50" height="50" click="home_clickHandler(event)"
+							horizontalCenter="0" skinClass="Skin.HomeButton" useHandCursor="true"/>
+	<s:Label id="supportby" bottom="110" height="25" fontFamily="Kinnari" fontSize="25"
+					 horizontalCenter="0" text="Copyright &amp; Support By"/>
+		<s:Button id="cscmu" bottom="5" width="100" height="100" click="cscmu_clickHandler(event)"
+							horizontalCenter="-125" skinClass="Skin.CSCMUButton" useHandCursor="true"/>
+		<s:Button id="scicmu" bottom="5" width="100" height="100" click="scicmu_clickHandler(event)"
+							horizontalCenter="0" skinClass="Skin.SciCMUButton" useHandCursor="true"/>
+		<s:Button id="cmu" bottom="5" width="100" height="100" click="cmu_clickHandler(event)"
+							horizontalCenter="125" skinClass="Skin.CMUButton" useHandCursor="true"/>
+	</s:BorderContainer>		
+</s:Window>

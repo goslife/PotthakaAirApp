@@ -1,0 +1,796 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+											 xmlns:s="library://ns.adobe.com/flex/spark" 
+											 xmlns:mx="library://ns.adobe.com/flex/mx"
+											 xmlns:openzoom="org.openzoom.flex.components.*"
+											 xmlns:controllers="org.openzoom.flash.viewport.controllers.*"
+											 xmlns:constraints="org.openzoom.flash.viewport.constraints.*"
+											 xmlns:transformers="org.openzoom.flash.viewport.transformers.*"
+											 width="1000" height="450" applicationComplete="init(event)"
+											 closing="potthaka_closingHandler(event)" currentState="Web"
+											 showStatusBar="false">
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		
+		@font-face{
+			src:url('assets/fonts/Kinnari.ttf');
+			fontFamily:Kinnari;
+			src:url('assets/fonts/Norasi.ttf');
+			fontFamily:Norasi;
+			src:url('assets/fonts/Servus_text_display_italic.ttf');
+			fontFamily:Servus;
+		}
+		global {
+			fontSize: 16px;
+			fontFamily:Norasi;
+		}
+		s|WindowedApplication {
+			background-color:#000000;
+		}
+		mx|ToolTip{
+			fontSize:16px;
+			backgroundAlpha:.75;
+		}
+		s|NumericStepper{
+			fontFamily:Kinnari;
+		}
+	</fx:Style>
+	<fx:Script>
+		<![CDATA[
+			import Group.AboutWindow;
+			import Group.ManualWindow;
+			
+			import flash.events.FullScreenEvent;
+			
+			import mx.controls.FlexNativeMenu;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.events.FlexNativeMenuEvent;
+			import mx.events.MenuEvent;
+			
+			import org.openzoom.flash.utils.FullScreenUtil;
+			
+			private var openlist:Array = new Array();
+			
+			private var aboutme:AboutWindow;
+			private var manual:ManualWindow;
+			private var menu1:FlexNativeMenu;
+			
+			private var totalpage:Number = 55;
+			private var firstpage:Number = 0;
+			private var lastpage:Number = 54;
+			private var page:Number = 0;
+			private var pathprefix:String = "../potthaka/S025/original/";
+			private var pathsubfix:String = ".xml";			
+			
+			[Bindable]
+			private var path:String;
+			
+			private function init(event:FlexEvent):void {
+				menu1 = new FlexNativeMenu();
+				menu1.addEventListener(mx.events.FlexNativeMenuEvent.ITEM_CLICK, native_itemClickHandler);
+				menu1.addEventListener(mx.events.FlexNativeMenuEvent.MENU_SHOW, nativeshow);
+				menu1.dataProvider = menuData;				
+				menu1.showRoot = false;
+				menu1.labelField = "@label";
+				menu1.keyEquivalentField="@keyEquivalent";
+				menu1.mnemonicIndexField="@mnemonicIndex";				
+				menu = menu1;
+				Archivesbt.enabled = false;
+				Metadatabt.enabled = true;
+				Archivesbt.toolTip = "Switch to Archives View.";
+				Metadatabt.toolTip = "Switch to Metadata View.";
+				Fullsceenbt.toolTip = "Switch to Fullscreen. (press F or right click on screen for use contextmenu)";
+				Manualbt.toolTip =  "View Mini Manual Help.";
+				Aboutbt.toolTip =  "About Potthaka Project.";
+				Closebt.toolTip =  "Close Potthaka Project Viewer. (press C)";
+				Zoominbt.toolTip =  "Zoom In. (press + or I or roll up or left click)";
+				Zoomoutbt.toolTip =  "Zoom Out. (press - or O or roll down or press Shift and left click)";
+				Showallbt.toolTip =  "Show All. (press H)";
+				Panleftbt.toolTip =  "Pan Left. (press A or Left arrow or Home)";
+				Panrightbt.toolTip =  "Pan Right. (press D or Right arrow or End)";
+				Panupbt.toolTip =  "Pan Up. (press W or Up arrow or PageUp)";
+				Pandownbt.toolTip =  "Pan Down. (press S or Down arrow or PageDown)";
+				Stepto.toolTip = "To change page.";
+				Pagefirstbt.toolTip =  "Show First Page.";
+				Pageprevbt.toolTip =  "Show Previous Page. (drag mouse down  on screen 200px)";
+				Pagenextbt.toolTip =  "Show Next Page. (drag mouse up on screen 200px)";
+				Pagelastbt.toolTip =  "Show Last Page.";
+				hideme.toolTip = "Click Here to Hide Toolbar.";
+				
+				addEventListener(FlexEvent.STATE_CHANGE_COMPLETE, onChangeState);
+				stage.addEventListener(FullScreenEvent.FULL_SCREEN, changefullscreentooltip);
+				
+				path = "../potthaka/S025/original/0.xml";
+				image.addEventListener(MouseEvent.CLICK, flipHandler);
+				Pagefirstbt.enabled = false;
+				Pageprevbt.enabled = false;			
+				
+				Stepto.stepSize = 1;
+				Stepto.minimum = firstpage;
+				Stepto.maximum = lastpage;
+				Stepto.value = page;				
+			}
+			
+			private function changefullscreentooltip(event:FullScreenEvent):void{
+				if(Fullsceenbt.toolTip == "Switch to Fullscreen."){
+					Fullsceenbt.toolTip = "Switch to Normalscreen.";
+					Fullsceenbt.selected = true;
+				}else if(Fullsceenbt.toolTip == "Switch to Normalscreen."){
+					Fullsceenbt.toolTip = "Switch to Fullscreen.";
+					Fullsceenbt.selected = false;
+				}
+			}
+			
+			protected function native_itemClickHandler(event:FlexNativeMenuEvent):void {
+				var origin:Point;
+				var dx:Number;
+				var dy:Number;		
+				if(event.label == "Fullscreen"){
+					FullScreenUtil.toggleFullScreen(stage);					
+				}
+				if(event.label == "Show All"){
+					context.viewport.showAll();
+				}
+				if(event.label == "Zoom In"){
+					origin = context.viewport.center;
+					context.viewport.zoomBy(context.zoomInFactor, origin.x, origin.y);
+				}
+				if(event.label == "Zoom Out"){
+					origin = context.viewport.center;
+					context.viewport.zoomBy(context.zoomOutFactor, origin.x, origin.y);
+				}
+				if(event.label == "Pan Up"){
+					dy = context.viewport.height * context.panFactor;
+					context.viewport.panBy(0, -dy);
+				}
+				if(event.label == "Pan Down"){
+					dy = context.viewport.height * context.panFactor;
+					context.viewport.panBy(0, dy);
+				}
+				if(event.label == "Pan Left"){
+					dx = context.viewport.width * context.panFactor;
+					context.viewport.panBy(-dx, 0);
+				}
+				if(event.label == "Pan Right"){
+					dx = context.viewport.width * context.panFactor;
+					context.viewport.panBy(dx, 0);
+				}
+				if(event.label == "Archives View"){
+					Archivesbt.enabled = false;
+					Metadatabt.enabled = true;
+					currentState='Web';
+				}
+				if(event.label == "Metadata View"){
+					Archivesbt.enabled = true;
+					Metadatabt.enabled = false;
+					currentState='Prey';
+				}
+				if(event.label == "First Page"){
+					if(page != firstpage){
+						page = firstpage;
+						Stepto.value = page;
+						path = pathprefix+page+pathsubfix;
+						Pagefirstbt.enabled = false;
+						Pageprevbt.enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = false;
+					}
+					if(page == firstpage){
+						Pagelastbt.enabled = true;
+						Pagenextbt.enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = true;
+					}
+				}
+				if(event.label == "Previous Page"){
+					prevPage();
+				}
+				if(event.label == "Next Page"){
+					nextPage();
+				}
+				if(event.label == "Last Page"){
+					if(page != lastpage){
+						page = lastpage;
+						Stepto.value = page;
+						path = pathprefix+page+pathsubfix;
+						Pagelastbt.enabled = false;
+						Pagenextbt.enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = false;
+					}
+					if(page == lastpage){
+						Pagefirstbt.enabled = true;
+						Pageprevbt.enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = true;
+					}
+				}
+				if(event.label == "Manual"){
+					manual = new ManualWindow();
+					manual.addEventListener(Event.CLOSE, closemanual);
+					if(openlist.indexOf("manual") == -1){
+						manual.open();
+						manual.move(stage.fullScreenWidth - manual.width -10,0);
+						openlist.unshift("manual");
+					}
+				}
+				if(event.label == "About Potthaka Project"){
+					aboutme = new AboutWindow();
+					aboutme.addEventListener(Event.CLOSE, closeaboutme);
+					if(openlist.indexOf("aboutme") == -1){
+						aboutme.open();
+						aboutme.move((stage.fullScreenWidth - aboutme.width)/2 -10,stage.fullScreenHeight/2 - aboutme.height/2 -50);
+						openlist.unshift("aboutme");
+					}
+				}
+				if(event.label == "Close"){
+					exit();
+				}
+				trace(event.label);
+			}
+			
+			protected function nativeshow(event:FlexNativeMenuEvent):void {
+				if(currentState == "Prey"){
+					menu1.nativeMenu.getItemAt(0).submenu.getItemAt(1).enabled = false; //Metadata View
+					menu1.nativeMenu.getItemAt(0).submenu.getItemAt(0).enabled = true; //Archives View			
+				}
+				if(currentState == "Web"){
+					menu1.nativeMenu.getItemAt(0).submenu.getItemAt(1).enabled = true; //Metadata View
+					menu1.nativeMenu.getItemAt(0).submenu.getItemAt(0).enabled = false; //Archives View
+					if(page == 1){
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = false;
+					}
+				}	
+			}
+			
+			protected function onChangeState(event:FlexEvent):void {				
+				if(currentState == "Prey"){
+					menu1.nativeMenu.getItemAt(1).enabled = false;
+					menu1.nativeMenu.getItemAt(2).enabled = false;
+					Archivesbt.enabled = true;
+					Metadatabt.enabled = false;
+					if(hideme.selected){
+						hideme.toolTip = "Click Here to Show Toolbar.";
+						Metaboard.top = 10;
+					}else{
+						hideme.toolTip = "Click Here to Hide Toolbar.";
+						Metaboard.top = 61;
+					}
+				}
+				if(currentState == "Web"){
+					menu1.nativeMenu.getItemAt(1).enabled = true;
+					menu1.nativeMenu.getItemAt(2).enabled = true;
+					Archivesbt.enabled = false;
+					Metadatabt.enabled = true;
+				}
+			}
+			
+			protected function hideme_clickHandler(event:MouseEvent):void {				
+				if(hideme.selected){
+					hideme.toolTip = "Click Here to Show Toolbar.";
+					Topbar.height = 10;
+					Workbar.visible = false;
+					if(currentState == "Prey"){
+						Metaboard.top = 10;
+					}
+				}else{
+					hideme.toolTip = "Click Here to Hide Toolbar.";
+					Topbar.height = 61;
+					Workbar.visible = true;
+					if(currentState == "Prey"){
+						Metaboard.top = 61;
+					}
+				}
+			}
+			
+			protected function Fullsceenbt_clickHandler(event:MouseEvent):void {
+				FullScreenUtil.toggleFullScreen(stage);
+			}
+			
+			protected function Archivesbt_clickHandler(event:MouseEvent):void {
+				Archivesbt.enabled = false;
+				Metadatabt.enabled = true;
+				currentState='Web';
+			}
+			
+			protected function Metadatabt_clickHandler(event:MouseEvent):void {
+				Archivesbt.enabled = true;
+				Metadatabt.enabled = false;
+				currentState='Prey';
+			}
+			
+			protected function Manualbt_clickHandler(event:MouseEvent):void{				
+				manual = new ManualWindow();
+				manual.addEventListener(Event.CLOSE, closemanual);
+				if(openlist.indexOf("manual") == -1){
+					manual.open();
+					manual.move(stage.fullScreenWidth - manual.width -10,0);
+					openlist.unshift("manual");
+				}
+				trace(openlist);
+			}
+			
+			protected function closemanual(event:Event):void{
+				if(openlist.indexOf("manual") != -1){
+					openlist.splice(openlist.indexOf("manual"),1);
+				}
+				trace(openlist);
+			}
+			
+			protected function Aboutbt_clickHandler(event:MouseEvent):void{
+				aboutme = new AboutWindow();
+				aboutme.addEventListener(Event.CLOSE, closeaboutme);
+				if(openlist.indexOf("aboutme") == -1){
+					aboutme.open();
+					aboutme.move((stage.fullScreenWidth - aboutme.width)/2 -10,stage.fullScreenHeight/2 - aboutme.height/2 -50);
+					openlist.unshift("aboutme");
+				}
+				trace(openlist);
+			}
+			
+			protected function closeaboutme(event:Event):void{
+				if(openlist.indexOf("aboutme") != -1){
+					openlist.splice(openlist.indexOf("aboutme"),1);					
+				}
+				trace(openlist);
+			}
+			
+			protected function Closebt_clickHandler(event:MouseEvent):void{				
+				exit();
+			}
+			
+			protected function Zoominbt_clickHandler(event:MouseEvent):void{
+				var origin:Point;
+				origin = context.viewport.center;
+				context.viewport.zoomBy(context.zoomInFactor, origin.x, origin.y);
+			}
+			
+			protected function Zoomoutbt_clickHandler(event:MouseEvent):void{
+				var origin:Point;
+				origin = context.viewport.center;
+				context.viewport.zoomBy(context.zoomOutFactor, origin.x, origin.y);
+			}
+			
+			protected function Showallbt_clickHandler(event:MouseEvent):void{				
+				context.viewport.showAll();
+			}
+			
+			protected function Panleftbt_clickHandler(event:MouseEvent):void{				
+				var dx:Number;
+				dx = context.viewport.width * context.panFactor;
+				context.viewport.panBy(-dx, 0);
+			}
+			
+			protected function Panrightbt_clickHandler(event:MouseEvent):void{				
+				var dx:Number;
+				dx = context.viewport.width * context.panFactor;
+				context.viewport.panBy(dx, 0);
+			}
+			
+			protected function Panupbt_clickHandler(event:MouseEvent):void{				
+				var dy:Number;
+				dy = context.viewport.height * context.panFactor;
+				context.viewport.panBy(0, -dy);
+			}
+			
+			protected function Pandownbt_clickHandler(event:MouseEvent):void{				
+				var dy:Number;
+				dy = context.viewport.height * context.panFactor;
+				context.viewport.panBy(0, dy);
+			}
+			
+			protected function Stepto_changeHandler(event:Event):void{				
+				if(Stepto.value >= firstpage && Stepto.value <= lastpage){
+					page = Stepto.value;
+					path = pathprefix+page+pathsubfix;
+					if(page == firstpage){
+						Pagefirstbt.enabled = false;
+						Pageprevbt.enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = false;
+					}
+					if(page != firstpage && Pagefirstbt.enabled == false){
+						Pagefirstbt.enabled = true;
+						Pageprevbt.enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = true;
+					}
+					if(page == lastpage){
+						Pagelastbt.enabled = false;
+						Pagenextbt.enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = false;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = false;
+					}
+					if(page != lastpage && Pagelastbt.enabled == false){
+						Pagelastbt.enabled = true;
+						Pagenextbt.enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = true;
+					}
+				}
+			}
+			
+			private function flipHandler(event:MouseEvent):void{
+				if(mouse.directionDrag == "up"){
+					nextPage();
+				}
+				if(mouse.directionDrag == "down"){
+					prevPage();
+				}
+			}
+			
+			private function nextPage():void{
+				if(page < lastpage && page >= firstpage){
+					page++;
+					Stepto.value = page;		
+					path = pathprefix+page+pathsubfix;
+					if(page != firstpage && Pagefirstbt.enabled == false){
+						Pagefirstbt.enabled = true;
+						Pageprevbt.enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = true;
+					}
+				}	
+				if(page == lastpage){
+					Pagelastbt.enabled = false;
+					Pagenextbt.enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = false;
+				}
+			}
+			
+			private function prevPage():void {
+				if(page <= lastpage && page > firstpage){
+					page--;
+					Stepto.value = page;					
+					path = pathprefix+page+pathsubfix;
+					if(page != lastpage && Pagelastbt.enabled == false){
+						Pagelastbt.enabled = true;
+						Pagenextbt.enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = true;
+						menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = true;
+					}
+				}
+				if(page == firstpage){
+					Pagefirstbt.enabled = false;
+					Pageprevbt.enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = false;
+				}
+			}	
+			
+			protected function Pagefirstbt_clickHandler(event:MouseEvent):void{				
+				if(page != 1){
+					page = 1;
+					Stepto.value = page;
+					path = pathprefix+page+pathsubfix;
+					Pagefirstbt.enabled = false;
+					Pageprevbt.enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = false;
+				}
+				if(page == 1){
+					Pagelastbt.enabled = true;
+					Pagenextbt.enabled = true;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = true;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = true;
+				}
+			}
+			
+			protected function Pageprevbt_clickHandler(event:MouseEvent):void{				
+				mouse.directionDrag = "down";
+				flipHandler(event);
+			}
+			
+			protected function Pagenextbt_clickHandler(event:MouseEvent):void{				
+				mouse.directionDrag = "up";
+				flipHandler(event);
+			}
+			
+			protected function Pagelastbt_clickHandler(event:MouseEvent):void{				
+				if(page != lastpage){
+					page = lastpage;
+					Stepto.value = page;
+					path = pathprefix+page+pathsubfix;
+					Pagelastbt.enabled = false;
+					Pagenextbt.enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(2).enabled = false;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(3).enabled = false;
+				}
+				if(page == lastpage){
+					Pagefirstbt.enabled = true;
+					Pageprevbt.enabled = true;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(0).enabled = true;
+					menu1.nativeMenu.getItemAt(2).submenu.getItemAt(1).enabled = true;
+				}
+			}
+			
+			protected function potthaka_closingHandler(event:Event):void{
+				exit();
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="Web"/>
+		<s:State name="Prey"/>
+	</s:states>
+	<fx:Declarations>
+		<s:XMLListCollection id="menuData">
+			<fx:XMLList xmlns="">
+				<menuitem name="potthaka" label="Potthaka" mnemonicIndex="0">
+					<submenu label="Archives View" />
+					<submenu label="Metadata View" />
+					<submenu type="separator"/>
+					<submenu label="Fullscreen" keyEquivalent="f" mnemonicIndex="0" />
+					<submenu type="separator"/>
+					<submenu label="About Potthaka Project" keyEquivalent="b" mnemonicIndex="1" />
+					<submenu label="Close" keyEquivalent="c" mnemonicIndex="0" />
+				</menuitem>
+				<menuitem label="View" mnemonicIndex="0">
+					<submenu label="Zoom In" keyEquivalent="+" mnemonicIndex="5" />
+					<submenu label="Zoom Out" keyEquivalent="-" mnemonicIndex="5" />
+					<submenu type="separator"/>
+					<submenu label="Show All" keyEquivalent="h" mnemonicIndex="1" />
+					<submenu type="separator"/>					
+					<submenu label="Pan Left" keyEquivalent="a" mnemonicIndex="4" />
+					<submenu label="Pan Right" keyEquivalent="d" mnemonicIndex="4" />
+					<submenu label="Pan Up" keyEquivalent="w" mnemonicIndex="4" />
+					<submenu label="Pan Down" keyEquivalent="s" mnemonicIndex="4" />
+				</menuitem>
+				<menuitem label="Page" mnemonicIndex="2">
+					<submenu label="First Page" mnemonicIndex="0" />
+					<submenu label="Previous Page" mnemonicIndex="0" />
+					<submenu label="Next Page" mnemonicIndex="0" />					
+					<submenu label="Last Page" mnemonicIndex="0" />
+				</menuitem>
+				<menuitem label="Help" mnemonicIndex="0">
+					<submenu label="Manual" keyEquivalent="m" mnemonicIndex="0" />
+				</menuitem>
+			</fx:XMLList>			
+		</s:XMLListCollection>
+	</fx:Declarations>
+	<openzoom:MultiScaleImage id="image" includeIn="Web" left="0" right="0" top="0" bottom="0"
+														source="{path}" useHandCursor="true">
+		<openzoom:transformer>
+			<transformers:TweensyZeroTransformer/>
+		</openzoom:transformer>
+		<openzoom:controllers>
+			<controllers:ContextMenuController id="context" />
+			<controllers:MouseController id="mouse" />
+			<controllers:KeyboardController />
+		</openzoom:controllers>
+		<openzoom:constraint>
+			<constraints:CompositeConstraint>
+				<constraints:ZoomConstraint maxZoom="8" minZoom="1"/>
+				<constraints:CenterConstraint />
+			</constraints:CompositeConstraint>
+		</openzoom:constraint>
+	</openzoom:MultiScaleImage>
+	<s:BorderContainer id="Metaboard" includeIn="Prey" left="0" right="0" top="36" bottom="0">
+		
+		<s:Scroller left="0" right="0" top="0" bottom="0">
+			<s:VGroup width="100%" height="100%">
+				<s:Form id="detailform" left="0" top="0" bottom="38" width="913" fontSize="14">
+					<s:layout>
+						<s:VerticalLayout paddingBottom="-10" paddingLeft="-10" paddingTop="-10"/>
+					</s:layout>
+					
+					<s:VGroup left="-5" top="0" width="904" height="670" gap="0">
+						<s:HGroup width="864" gap="-10" paddingLeft="-10">
+							<s:FormItem width="133" label="Serial">
+								<s:TextInput id="serialTI" width="70" editable="false"
+														 text="วล.025" />
+							</s:FormItem>
+							<s:FormItem width="317" label="Title">
+								<s:TextInput id="titleTI" width="260" editable="false"
+														 text="ตำนานพื้นเมืองเชียงใหม่ 2ผูก ผูกที่2"/>
+							</s:FormItem>
+							<s:FormItem width="260" label="Version">
+								<s:TextInput id="versionTI" width="177" editable="false"
+														 text=""/>
+							</s:FormItem>
+							<s:FormItem width="139" label="Period">
+								<s:TextInput id="periodTI" width="62" editable="false"
+														 text="1280" />
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="536" gap="-10" paddingLeft="-10">
+							<s:FormItem width="236" label="Type">
+								<s:TextInput id="typeTI" width="168" editable="false"
+														 text="ตำนาน" />
+							</s:FormItem>
+							<s:FormItem width="296" label="SubType">
+								<s:TextInput id="subtypeTI" width="199" editable="false"
+														 text="ตำนานปูชนียสถานและปูชนียวัตถุ" />
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="815" gap="-10" paddingLeft="-10">
+							<s:FormItem width="236" label="Format">
+								<s:TextInput id="formatTI" width="152" editable="false"
+														 text="ใบลานยาว" />
+							</s:FormItem>
+							<s:FormItem width="185" label="Total Page">
+								<s:TextInput id="totalpageTI" width="75" editable="false"
+														 text="53" />
+							</s:FormItem>
+							<s:FormItem width="147" label="Volume">
+								<s:TextInput id="volTI" width="60" editable="false"
+														 text="2" />
+							</s:FormItem>
+							<s:FormItem width="183" label="Total Volume">
+								<s:TextInput id="totalvolTI" width="60" editable="false"
+														 text="2" />
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="829" gap="-10" paddingLeft="-10">
+							<s:FormItem width="586" label="Format Note">
+								<s:TextInput id="fnoteTI" width="471" editable="false"
+														 text="ใบลานขนาดยาว" />
+							</s:FormItem>
+							<s:FormItem width="242" label="Publisher">
+								<s:TextInput id="publisherTI" width="150" editable="false"
+														 text="" />
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="880" gap="-10" paddingLeft="-10">
+							<s:FormItem width="884" label="Footnote">
+								<s:TextArea id="footnoteTA" width="731" height="60" editable="false" lineBreak="toFit"
+														text="เสด็จแล้วยามตูดเช้าชะดาคมเข้าแล้ว เดือน 12 ลง 8 ฅ่ำ เมงวัน 7 ไทกดเร้า สักกได้ 1280 ตัว ปีเปิกสง้า รฤษ์ได้ 5 ตัว อินฺทวิราโสเขียนปางเมื่ออยู่ปฏิบัติธุหลวงยารังสี วัดดอนพินแล สุทินฺนํ วตฺตเมทานํ นิพฺพานํ ปรมํสุขํ ขอบุญค้ำชูตัวข้าพ่อแม่น้าน้องหลาน พ่อออก แม่ออก ชุฅนแด่เทิอะ"/>
+							</s:FormItem>
+							
+						</s:HGroup>
+						<s:HGroup width="491" gap="-10" paddingLeft="-10">
+							<s:FormItem width="244" label="Place">
+								<s:TextInput id="placeTI" width="171" editable="false"
+														 text="วัดดอนปิน" />
+							</s:FormItem>
+							<s:FormItem width="246" label="District">
+								<s:TextInput id="districtTI" width="158" editable="false"
+														 text="แช่ช้าง" />
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="480" gap="-10" paddingLeft="-10">
+							<s:FormItem width="245" label="City">
+								<s:TextInput id="cityTI" width="178" editable="false"
+														 text="สันกำแพง" />
+							</s:FormItem>
+							<s:FormItem width="240" label="Province">
+								<s:TextInput id="proviceTI" width="150" editable="false"
+														 text="เชียงใหม่"/>
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="634" gap="-10" paddingLeft="-10">
+							<s:FormItem width="228" label="DateCreated">
+								<s:TextInput id="datecreatedTI" width="80" editable="false"
+														 text="" />
+							</s:FormItem>
+							<s:FormItem width="211" label="DateDigitized">
+								<s:TextInput id="datedigitizedTI" width="80" editable="false"
+														 text="2008-01-03"/>
+							</s:FormItem>
+							<s:FormItem width="205" label="DateInscribe">
+								<s:TextInput id="dateinscribeTI" width="80" editable="false"
+														 text=""/>
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="662" gap="-10" paddingLeft="-10">
+							<s:FormItem width="227" label="DateMicrofilmed">
+								<s:TextInput id="datemicrofilmedTI" width="80" editable="false"
+														 text=""/>
+							</s:FormItem>
+							<s:FormItem width="211" label="DateModified">
+								<s:TextInput id="datemodifiedTI" width="80" editable="false"
+														 text="" />
+							</s:FormItem>
+							<s:FormItem width="208" label="DateSurveyed">
+								<s:TextInput id="datesurveyedTI" width="80" editable="false"
+														 text=""/>
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="904" gap="-10" paddingLeft="-10">
+							<s:FormItem width="308" label="Owner">
+								<s:TextArea id="ownTA" width="210" height="60" editable="false"
+														lineBreak="toFit" text="วัดดอนปิน"/>
+							</s:FormItem>
+							<s:FormItem width="286" label="Author">
+								<s:TextArea id="authorTA" width="210" height="60" editable="false"
+														lineBreak="toFit" text="อินทวิราโสภิกขุ"/>
+							</s:FormItem>
+							<s:FormItem width="337" label="Potthaka Editor">
+								<s:TextArea id="editorTA" width="210" height="60" editable="false"
+														lineBreak="toFit" text="	เกียรติคุณ อินตานิ"/>
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="902" gap="-10" paddingLeft="-10">
+							<s:FormItem width="304" label="Character">
+								<s:TextArea id="characterTA" width="210" height="60" editable="false"
+														lineBreak="toFit" text="อักษรธรรมล้านนา"/>
+							</s:FormItem>
+							<s:FormItem width="306" label="Language">
+								<s:TextArea id="languageTA" width="210" height="60" editable="false"
+														lineBreak="toFit" text="ล้านนา"/>
+							</s:FormItem>
+							<s:FormItem width="322" label="Potthaka Note">
+								<s:TextArea id="vnoteTA" width="210" height="60" editable="false" lineBreak="toFit"
+														text="มีปกหน้าและปกหลัง"/>
+							</s:FormItem>
+						</s:HGroup>
+						<s:HGroup width="805" gap="-10" paddingLeft="-10">
+							<s:FormItem width="341" label="Story">
+								<s:TextArea id="storyTA" width="210" height="60" editable="false" lineBreak="toFit"
+														text="ตำนานพื้นเมืองเชียงใหม่ 2ผูก ผูกที่1"/>
+							</s:FormItem>
+							<s:FormItem width="262" label="Tag">
+								<s:TextArea id="tagTA" width="210" height="60" editable="false" lineBreak="toFit"
+														text="ตำนานผ้าขาว, ตำนานพระบาทดอนกลาง, ตำนานเมืองเชียงใหม่, นาสิกธาตุ, นาหลังช้างซ้าย, มหาเถรฟ้าบด, อินทขิล"/>
+							</s:FormItem>
+						</s:HGroup>
+					</s:VGroup>
+				</s:Form>
+				
+			</s:VGroup>
+		</s:Scroller>
+	</s:BorderContainer>
+	
+	<s:BorderContainer id="Topbar" left="0" right="0" top="0" height="61" borderWeight="1"
+										 skinClass="Skin.Barder">
+		<s:BorderContainer id="Workbar" left="0" right="0" top="0" height="51"
+											 skinClass="Skin.AlphaBorderContainer"
+											 >
+			<s:Button id="Archivesbt" x="2" top="0" width="50" height="50"
+								skinClass="Skin.ArchivesButton"
+								click="Archivesbt_clickHandler(event)"/>			
+			<s:Button id="Metadatabt" x="51" top="0" width="50" height="50"
+								skinClass="Skin.MetadataButton"
+								click="Metadatabt_clickHandler(event)"/>
+			<mx:VRule x="102" top="2" height="46" strokeColor="#000000"/>
+			<s:ToggleButton id="Fullsceenbt" left="104" top="0" width="50" height="50"
+											skinClass="Skin.FullsceenToggleButton"
+											click="Fullsceenbt_clickHandler(event)"/>
+			<s:Button id="Manualbt" x="155" top="0" width="50" height="50" skinClass="Skin.ManualButton"
+								click="Manualbt_clickHandler(event)"/>			
+			<s:Button id="Aboutbt" x="206" top="0" width="50" height="50" skinClass="Skin.AboutButton"
+								click="Aboutbt_clickHandler(event)"/>
+			<s:Button id="Closebt" x="257" top="0" width="50" height="50" skinClass="Skin.CloseButton"
+								click="Closebt_clickHandler(event)"/>
+			
+			<s:BorderContainer id="Webbar" includeIn="Web" left="306" right="0" top="0" height="51"
+												 skinClass="Skin.AlphaBorderContainer">
+				<mx:VRule x="1" top="2" height="46" strokeColor="#000000"/>
+				<s:Button id="Zoominbt" x="3" top="0" width="50" height="50"
+									click="Zoominbt_clickHandler(event)" skinClass="Skin.ZoomInButton"/>
+				<s:Button id="Zoomoutbt" x="54" top="0" width="50" height="50"
+									click="Zoomoutbt_clickHandler(event)" skinClass="Skin.ZoomOutButton"/>
+				<s:Button id="Showallbt" x="105" top="0" width="50" height="50"
+									click="Showallbt_clickHandler(event)" skinClass="Skin.ShowAllButton"/>
+				<s:Button id="Panleftbt" x="156" top="0" width="50" height="50"
+									click="Panleftbt_clickHandler(event)" skinClass="Skin.PanLeftButton"/>
+				<s:Button id="Panrightbt" x="207" top="0" width="50" height="50"
+									click="Panrightbt_clickHandler(event)" skinClass="Skin.PanRightButton"/>
+				<s:Button id="Panupbt" x="258" top="0" width="50" height="50"
+									click="Panupbt_clickHandler(event)" skinClass="Skin.PanUpButton"/>
+				<s:Button id="Pandownbt" x="309" top="0" width="50" height="50"
+									click="Pandownbt_clickHandler(event)" skinClass="Skin.PanDownButton"/>
+				<mx:VRule x="360" top="2" height="46" strokeColor="#000000"/>
+				<s:NumericStepper id="Stepto" x="362" top="2" width="100" height="48"
+													change="Stepto_changeHandler(event)" fontSize="34"/>
+				<s:Button id="Pagefirstbt" x="463" top="0" width="50" height="50"
+									click="Pagefirstbt_clickHandler(event)" skinClass="Skin.PageFirstButton"/>
+				<s:Button id="Pageprevbt" x="514" top="0" width="50" height="50"
+									click="Pageprevbt_clickHandler(event)" skinClass="Skin.PagePrevButton"/>
+				<s:Button id="Pagenextbt" x="565" top="0" width="50" height="50"
+									click="Pagenextbt_clickHandler(event)" skinClass="Skin.PageNextButton"/>
+				<s:Button id="Pagelastbt" x="616" top="0" width="50" height="50"
+									click="Pagelastbt_clickHandler(event)" skinClass="Skin.PageLastButton"/>
+			</s:BorderContainer>	
+			
+		</s:BorderContainer>	
+		<s:ToggleButton id="hideme" left="0" right="0" bottom="0" height="10"
+										skinClass="Skin.BarToggleButton"
+										click="hideme_clickHandler(event)"/>
+	</s:BorderContainer>
+</s:WindowedApplication>

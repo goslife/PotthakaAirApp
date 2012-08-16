@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Window xmlns:fx="http://ns.adobe.com/mxml/2009"
+					xmlns:s="library://ns.adobe.com/flex/spark"
+					xmlns:mx="library://ns.adobe.com/flex/mx"
+					width="345" height="700" maxWidth="345" alwaysInFront="true"
+					creationComplete="init(event)" maximizable="false" minimizable="false"
+					showStatusBar="false" title="Manual Help">
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";		
+		@font-face{
+			src:url('assets/fonts/Kinnari.ttf');
+			fontFamily:Kinnari;
+		}
+	</fx:Style>
+	<fx:Declarations>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			protected function init(event:FlexEvent):void{
+				wheel.text = "\"Mouse\"\n\n===Wheel===\nRoll up = Zoom In\n"
+					+"Roll down = Zoom Out";
+				clickme.text = "===Right Click===\nRightClick = Context Menu\n"
+					+"===Left Click===\nClick = Zoom In\nSHIFT + Click = Zoom Out";
+				panTL.text = "\nWhen Maximum Zoom In\nRoll up + Position of Cursor"
+					+"\nor Click + Position of Cursor\nTop = Pan Up\nLeft = Pan Left";
+				panBR.text = "\nBottom = Pan Down\nRight = Pan Right";
+				panme.text = "===Drag Mouse===\nWhen You take Zoom In,\n"
+					+"You can drag mouse.\n"
+					+"Drag Up = Pan Up\nDrag Down = Pan Down\n"
+					+"Drag Left = Pan Left\nDrag Right = Pan Right";
+				dragme.text = "Long Drag Up = Next Page\n"
+					+"Long Drag Down\n = Previous Page\n"
+					+"***Warn***\nLong Drag = 200px or\n"
+					+"about 1/2 of height\nnormal screen(443px)";
+				pressme.text = "\"Keyboard\"\n\n===Press===\n"
+					+"F = Fullscreen\nEsc = Exit Fullscreen\nH = Show All\n"
+					+"I / + = Zoom In\nO / - = Zoom Out\n"
+					+"W / Up Arrow / PAGE_UP\n = Pan Up\n"
+					+"S / Down / PAGE_DOWN\n = Pan Down\n"
+					+"A / Left Arrow / HOME\n = Pan Left\n"
+					+"D / Right / END\n = Pan Right\n";
+			}
+			
+		]]>
+	</fx:Script>
+	<s:Scroller left="0" right="0" top="0" bottom="0">
+	<s:Group id="navboad" width="100%" height="100%">
+		<s:BitmapImage left="0" top="5" width="128" height="128"
+									 source="@Embed('../assets/help/wheel128.png')"/>
+		
+		<s:RichEditableText id="wheel" left="128" right="5" top="5" height="125" editable="false" fontSize="16" fontFamily="Kinnari"/>
+		
+		<s:BitmapImage left="0" top="130" width="128" height="128"
+									 source="@Embed('../assets/help/click128.png')"/>
+		
+		<s:RichEditableText id="clickme" left="128" right="5" top="130" height="120" editable="false" fontSize="16" fontFamily="Kinnari"/>
+		
+		<s:BitmapImage left="0" top="230" width="128" height="128"
+									 source="@Embed('../assets/help/panTL128.png')"/>
+		
+		<s:RichEditableText id="panTL" left="128" right="5" top="230" height="120" editable="false" fontSize="16" fontFamily="Kinnari"/>
+		
+		<s:BitmapImage left="0" top="370" width="128" height="128"
+									 source="@Embed('../assets/help/panBR128.png')"/>
+		
+		<s:RichEditableText id="panBR" left="128" right="5" top="370" height="120" editable="false" fontSize="16" fontFamily="Kinnari"/>
+		
+		<s:BitmapImage left="0" top="500" width="128" height="128"
+									 source="@Embed('../assets/help/pan128.png')"/>
+		
+		<s:RichEditableText id="panme" left="128" right="5" top="500" height="135" editable="false" fontSize="16" fontFamily="Kinnari"/>
+		
+		<s:BitmapImage left="0" top="650" width="128" height="128"
+									 source="@Embed('../assets/help/drag128.png')"/>
+		
+		<s:RichEditableText id="dragme" left="128" right="5" top="650" editable="false" fontSize="16" fontFamily="Kinnari"/>
+		
+		<s:BitmapImage left="3" top="800" width="128" height="128"
+									 source="@Embed('../assets/help/keyboard128.png')"/>
+		
+		<s:RichEditableText id="pressme" left="133" right="5" top="800" editable="false" fontSize="16" fontFamily="Kinnari"/>
+	</s:Group>
+	</s:Scroller>
+</s:Window>
